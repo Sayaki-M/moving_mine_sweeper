@@ -1,4 +1,4 @@
-# play from here
+# here to play
 https://ugokusweeper.web.app/
 # 概要
 爆弾が動くマインスイーパーです  
