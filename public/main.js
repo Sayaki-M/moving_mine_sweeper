@@ -25,6 +25,7 @@ phina.define('MainScene', {
     this.bomb=[];
     this.shuffle();
     this.tiles=[];
+    let label = Label({text:"● × "+BOMBNUM,fontSize:40}).addChildTo(this).setPosition(this.gridX.center(),120);
     this.tileGroup=DisplayElement().addChildTo(this).setPosition(this.gridX.center()-TILE*(TILENUM-1)/2,this.gridY.center()-TILE*(TILENUM-1)/2);
     var self = this;
     for(let y = 0; y < TILENUM; y++){
