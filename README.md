@@ -3,7 +3,7 @@ https://ugokusweeper.web.app/
 # 概要
 爆弾が動くマインスイーパーです  
 10個ある爆弾を踏まずに他のすべてのマスを開けたらクリアです  
-マスに書かれた数字はそのマスの周り（上下左右斜め）の8マスに含まれる爆弾の数を表しています
+マスに書かれた数字はそのマスの周囲(上下左右斜め)の8マスに含まれる爆弾の数を表しています
 # outline
 This game is mine-moving mine sweeper.  
 There're 10 bombs in the tiles.  
