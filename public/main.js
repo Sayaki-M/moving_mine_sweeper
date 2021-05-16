@@ -11,27 +11,29 @@ const COLORS = {
       3:'#1d695f',
       4:'#844f30',
 };
-const TILE=60;
-const TILENUM=9;
-const BOMBNUM=10;
-
+const TILE = {
+  9:60
+};
 // MainScene クラスを定義
 phina.define('MainScene', {
   superClass: 'DisplayScene',
   init: function(option) {
+    option = (option || {}).$safe({tilenum:9,bombnum:10});
     this.superInit(option);
     // 背景色を指定
+    this.tilenum=option.tilenum
+    this.bombnum=option.bombnum
     this.backgroundColor = COLORS.bg;
     this.bomb=[];
     this.shuffle();
     this.tiles=[];
-    let label = Label({text:"● × "+BOMBNUM,fontSize:40}).addChildTo(this).setPosition(this.gridX.center(),120);
-    this.tileGroup=DisplayElement().addChildTo(this).setPosition(this.gridX.center()-TILE*(TILENUM-1)/2,this.gridY.center()-TILE*(TILENUM-1)/2);
+    let label = Label({text:"● × "+this.bombnum,fontSize:40}).addChildTo(this).setPosition(this.gridX.center(),120);
+    this.tileGroup=DisplayElement().addChildTo(this).setPosition(this.gridX.center()-TILE[this.tilenum]*(this.tilenum-1)/2,this.gridY.center()-TILE[this.tilenum]*(this.tilenum-1)/2);
     var self = this;
-    for(let y = 0; y < TILENUM; y++){
+    for(let y = 0; y < this.tilenum; y++){
       let tiles = []
-      for(let x = 0; x < TILENUM; x++){
-        let tile = Tile(x,y,self.bomb[x][y]).addChildTo(self.tileGroup).setPosition(x*TILE,y*TILE);
+      for(let x = 0; x < this.tilenum; x++){
+        let tile = Tile(x,y,self.bomb[x][y]).addChildTo(self.tileGroup).setPosition(x*TILE[this.tilenum],y*TILE[this.tilenum]);
         tile.onpointend=function(){
           if(tile.b==1){
             tile.open();
@@ -51,16 +53,16 @@ phina.define('MainScene', {
     }
   },
   shuffle:function(){
-    let prearray =Array(TILENUM*TILENUM-BOMBNUM).fill(0).concat(Array(BOMBNUM).fill(1));
+    let prearray =Array(this.tilenum*this.tilenum-this.bombnum).fill(0).concat(Array(this.bombnum).fill(1));
     let self=this;
     for (let i = prearray.length - 1; i >= 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [prearray[i], prearray[j]] = [prearray[j], prearray[i]];
     }
-    for(let i = 0;i<TILENUM;i++){
+    for(let i = 0;i<this.tilenum;i++){
       let darray = [];
-      for(let j=0;j<TILENUM;j++){
-        darray.push(prearray[i*TILENUM+j]);
+      for(let j=0;j<this.tilenum;j++){
+        darray.push(prearray[i*this.tilenum+j]);
       }
       self.bomb.push(darray);
     }
@@ -72,14 +74,14 @@ phina.define('MainScene', {
   },
   movebomb:function(){
     let self = this;
-    for(let y = 0; y < TILENUM; y++){
-      for(let x = 0; x < TILENUM; x++){
+    for(let y = 0; y < this.tilenum; y++){
+      for(let x = 0; x < this.tilenum; x++){
         if(self.tiles[x][y].b!=1)continue;
         let n = [0,1,2,3,4]; //1:↑,2:←,3:↓,4:→
         if(x==0||self.tiles[x-1][y].b!=0)n=n.filter(a=>a!==1);
         if(y==0||self.tiles[x][y-1].b!=0)n=n.filter(a=>a!==2);
-        if(x==TILENUM-1||self.tiles[x+1][y].b!=0)n=n.filter(a=>a!==3);
-        if(y==TILENUM-1||self.tiles[x][y+1].b!=0)n=n.filter(a=>a!==4);
+        if(x==this.tilenum-1||self.tiles[x+1][y].b!=0)n=n.filter(a=>a!==3);
+        if(y==this.tilenum-1||self.tiles[x][y+1].b!=0)n=n.filter(a=>a!==4);
         let a = Math.floor(Math.random()*n.length);
         switch (n[a]) {
           case 1:
@@ -105,13 +107,12 @@ phina.define('MainScene', {
   count:function(){
     let i = 0;
     let self=this;
-    for(let y = 0; y < TILENUM; y++){
-      for(let x = 0; x < TILENUM; x++){
+    for(let y = 0; y < this.tilenum; y++){
+      for(let x = 0; x < this.tilenum; x++){
         if(self.tiles[x][y].b!=-1)i++;
       }
     }
-    console.log(i);
-    if(i==BOMBNUM){
+    if(i==this.bombnum){
       setTimeout(()=>{
         alert("clear");
         self.exit();
@@ -120,13 +121,13 @@ phina.define('MainScene', {
   },
   shownum:function(){
     let self = this;
-    for(let y = 0; y < TILENUM; y++){
-      for(let x = 0; x < TILENUM; x++){
+    for(let y = 0; y < this.tilenum; y++){
+      for(let x = 0; x < this.tilenum; x++){
         if(self.tiles[x][y].b!=-1)continue;
         let t=0;
         for(let i = -1;i<=1;i++){
           for(let j=-1;j<=+1;j++){
-            if(x+i<0||x+i>=TILENUM||y+j<0||y+j>=TILENUM)continue;
+            if(x+i<0||x+i>=this.tilenum||y+j<0||y+j>=this.tilenum)continue;
             if(self.tiles[x+i][y+j].b==1){
               t++;
             }
@@ -162,7 +163,7 @@ phina.define('Tile',{
 phina.define('TileDesign',{
   superClass: 'RectangleShape',
   init: function(){
-    this.superInit({width:TILE,height:TILE,stroke:COLORS.frame,strokeWidth:10});
+    this.superInit({width:TILE[this.tilenum],height:TILE[this.tilenum],stroke:COLORS.frame,strokeWidth:10});
   }
 });
 
