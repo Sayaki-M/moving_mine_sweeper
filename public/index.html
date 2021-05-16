@@ -7,31 +7,37 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
 
     <title>動くスイーパー</title>
+
+  </head>
+  <body>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.5.0/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.5.0/firebase-analytics.js"></script>
+
+    <script>
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      var firebaseConfig = {
+        apiKey: "AIzaSyAtJ6BqcK5CMb9t6Ira_Psl1Gst_5MYSM0",
+        authDomain: "ugokusweeper.firebaseapp.com",
+        projectId: "ugokusweeper",
+        storageBucket: "ugokusweeper.appspot.com",
+        messagingSenderId: "777291239894",
+        appId: "1:777291239894:web:0ba32d304c35260cb8d477",
+        measurementId: "G-RBQW3FLR5Y"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+    </script>
+
     <!-- phina.js を読み込む -->
     <script src='https://cdn.jsdelivr.net/npm/phina.js@0.2.2/build/phina.min.js'></script>
 
     <!-- メイン処理 -->
     <script src='main.js'></script>
-  </head>
-  <body>
-    <!-- The core Firebase JS SDK is always required and must be listed first -->
-<script src="https://www.gstatic.com/firebasejs/7.21.1/firebase-app.js"></script>
-
-<!-- TODO: Add SDKs for Firebase products that you want to use
-     https://firebase.google.com/docs/web/setup#available-libraries -->
-
-<script>
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAtJ6BqcK5CMb9t6Ira_Psl1Gst_5MYSM0",
-    authDomain: "ugokusweeper.firebaseapp.com",
-    projectId: "ugokusweeper",
-    storageBucket: "ugokusweeper.appspot.com",
-    messagingSenderId: "777291239894",
-    appId: "1:777291239894:web:0ba32d304c35260cb8d477"
-  };
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-</script>
   </body>
 </html>
