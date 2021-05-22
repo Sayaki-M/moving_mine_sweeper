@@ -136,12 +136,20 @@ phina.define('Tiles',{
     }
   },
   shuffle:function(x,y){
-    let prearray = new Array(this.tilenum*this.tilenum).fill(null).map((_,i)=>[Math.floor(i/this.tilenum),i%this.tilenum]).filter(i=>(i[0]!=x || i[1]!=y));
+    let prearray = []
+    for(let i=0;i<this.tilenum;i++){
+      for(let j=0;j<this.tilenum;j++){
+        prearray[i*this.tilenum+j]=[i,j]
+      }
+    }
+    prearray=prearray.filter(i=>(i[0]!=x || i[1]!=y));
     for (let i = prearray.length - 1; i >= 0; i--) {
       let j = Math.floor(Math.random() * (i + 1));
       [prearray[i], prearray[j]] = [prearray[j], prearray[i]];
     }
-    this.bombs = prearray.slice(0,this.bombnum)
+    for (let i = 0; i<this.bombnum;i++) {
+      this.bombs[i] = [prearray[i][0],prearray[i][1]]
+    }
     this.setnum();
     this.isclicked=true
   },
@@ -175,7 +183,7 @@ phina.define('Tiles',{
       self.tiles[bomb[0]][bomb[1]].isbomb=true;
       direct.forEach(item => {
         if(0 <= bomb[0]+item[0] && bomb[0]+item[0] < self.tilenum && 0 <= bomb[1]+item[1] && bomb[1]+item[1] < self.tilenum){
-          self.tiles[bomb[0]+item[0]][bomb[1]+item[1]].bombaround+=1
+          self.tiles[bomb[0]+item[0]][bomb[1]+item[1]].bombaround+=1;
         }
       });
     });
@@ -194,12 +202,11 @@ phina.define('Tiles',{
       let direct = new Array(9).fill(null).map((_,i)=>[Math.floor(i/3)-1,i%3-1])
       direct = direct.filter(i=>i[0]*i[1]==0)
       direct = direct.filter(i=>(0 <= bombx+i[0] && bombx+i[0] < self.tilenum && 0 <= bomby+i[1] && bomby+i[1] < self.tilenum))
-                     .filter(i=>!(self.tiles[bombx+i[0]][bomby+i[1]].isbomb))
+                     .filter(i=>!(self.bombs.some(j=>(j[0]==bombx+i[0] && j[1]==bomby+i[1]))))
                      .filter(i=>!(self.tiles[bombx+i[0]][bomby+i[1]].isopen))
       direct.push([0, 0])
       let a = Math.floor(Math.random()*direct.length);
-      this.bombs[i][0]+=direct[a][0];
-      this.bombs[i][1]+=direct[a][1];
+      this.bombs[i]=[bombx+direct[a][0],bomby+direct[a][1]];
     }
     this.setnum()
   },
