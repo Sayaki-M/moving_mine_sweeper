@@ -24,13 +24,25 @@ phina.define('MainScene', {
     this.tilewidth = 504/this.tilenum
     option.tilewidth=this.tilewidth
     this.backgroundColor = COLORS.bg;
-    let label = Label({text:"● × "+this.bombnum,fontSize:40}).addChildTo(this).setPosition(this.gridX.center(),120);
+    this.isongame=false;
+    this.time=0;
+    this.timelabel = Label({text:"⌛000",fontSize:40}).addChildTo(this).setPosition(500,120)
+    let label = Label({text:"💣×"+this.bombnum,fontSize:40}).addChildTo(this).setPosition(this.gridX.center(),120);
     let self = this
     this.tileGroup=Tiles(option).addChildTo(this).setPosition(this.gridX.center()-(this.tilewidth+3)*(this.tilenum-1)/2,this.gridY.center()-(this.tilewidth+3)*(this.tilenum-1)/2);
-    let configbutton = ButtonDesign({text:"⚙設定"}).addChildTo(this).setPosition(100,120)
+    let configbutton = ButtonDesign({text:"⚙設定"}).addChildTo(this).setPosition(140,120)
     configbutton.onpointend=()=>{
       self.exit('setting',option)
     }
+  },
+  update:function(app){
+    if(this.isongame){
+      this.time += app.deltaTime;
+      this.timelabel.text="⌛"+ (Array(3).join('0')+Math.min(Math.floor(this.time/1000),999)).slice(-3);
+    }
+  },
+  start:function(){
+    this.isongame=true
   },
   gameover: function(){
     this.tileGroup.tiles.forEach(ytiles => {
@@ -38,7 +50,7 @@ phina.define('MainScene', {
         tile.setInteractive(false)
       });
     });
-
+    this.isongame=false
     let button = ButtonDesign({text:"retry",width:120,height:60}).addChildTo(this).setPosition(540,880)
     button.onpointend=() =>this.exit({tilenum:this.tilenum,bombnum:this.bombnum})
   }
@@ -95,7 +107,7 @@ phina.define('SettingScene',{
   },
   changebomb:function(){
     this.bombnum=this.bombnumbutton.num;
-    this.bomblabel.text = "バクダン数 ● × "+this.bombnum;
+    this.bomblabel.text = "バクダン数 💣 × "+this.bombnum;
     this.changetilerange();
   },
   changetile:function(){
@@ -155,6 +167,7 @@ phina.define('Tiles',{
   },
   play:function(x,y){
     if(!(this.isclicked)){
+      this.parent.start()
       this.shuffle(x,y);
     }
     this.tiles[x][y].open();
@@ -249,7 +262,7 @@ phina.define('Tile',{
   },
   setlabel: function(){
     if(this.isbomb){
-      this.change("●");
+      this.change("💣");
     }else{
       this.change(this.bombaround)
     }
