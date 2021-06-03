@@ -186,10 +186,10 @@ phina.define('Tiles',{
     if(this.tiles[x][y].isbomb){
       this.gameover(false); //負け
     }else{
-      this.opentile++;
       if(this.count()){
         this.movebomb();
       }
+      this.opentile++;
     }
   },
   setnum: function(){
@@ -232,7 +232,7 @@ phina.define('Tiles',{
     this.setnum()
   },
   count:function(){
-    if(this.opentile==this.tilenum*this.tilennum-this.bombnum){
+    if(this.opentile+1==(this.tilenum*this.tilenum-this.bombnum)){
       this.gameover(true); //勝ち
       return false;
     }
