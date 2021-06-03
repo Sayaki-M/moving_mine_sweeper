@@ -4,12 +4,14 @@ phina.globalize();
 const COLORS = {
       bg:'#dfe0d8',
       frame:'#43464d',
-      aframe:'red',
+      close: "gray",
+      open : "white",
       0:'#9aadbe',
       1:'#934e61',
       2:'#4d639f',
       3:'#1d695f',
       4:'#844f30',
+
 };
 
 // MainScene クラスを定義
@@ -42,17 +44,31 @@ phina.define('MainScene', {
     }
   },
   start:function(){
-    this.isongame=true
+    this.isongame=true;
   },
-  gameover: function(){
+  gameover: function(opentile){
     this.tileGroup.tiles.forEach(ytiles => {
       ytiles.forEach(tile => {
         tile.setInteractive(false)
       });
     });
-    this.isongame=false
+    this.isongame=false;
     let button = ButtonDesign({text:"retry",width:120,height:60}).addChildTo(this).setPosition(540,880)
     button.onpointend=() =>this.exit({tilenum:this.tilenum,bombnum:this.bombnum})
+    this.historybutton = ChangeLRNumButton({num:opentile,maxnum:opentile,minnum:0}).addChildTo(this).setPosition(320,880);
+    this.historybutton.rightbutton.onpointend= () => {
+      this.historybutton.upnum();
+      this.updatehistory(this.historybutton.num)
+    }
+    this.historybutton.leftbutton.onpointend= () => {
+      this.historybutton.downnum();
+      this.updatehistory(this.historybutton.num)
+    }
+    this.historytext = Label({text: (opentile + 1) + "手目",fontSize:40 }).addChildTo(this).setPosition(320,880)
+  },
+  updatehistory: function(h){
+    this.tileGroup.sethistory(h)
+    this.historytext.text=(h + 1) + "手目"
   }
 });
 
@@ -131,13 +147,14 @@ phina.define('Tiles',{
   init: function(option){
     option = (option || {}).$safe({tilenum:9,bombnum:10,tilewidth:56})
     this.superInit();
-    this.tilenum=option.tilenum
-    this.bombnum=option.bombnum
-    this.tilewidth = option.tilewidth
-    this.blindtile = this.tilenum*this.tilenum;
-    this.bombs=[];
-    this.tiles=[];
-    this.isclicked = false;
+    this.tilenum = option.tilenum;
+    this.bombnum = option.bombnum;
+    this.tilewidth = option.tilewidth;
+    this.opentile = 0;
+    this.bombs = [];
+    this.tiles = [];
+    this.history = [];
+    this.isongame = false;
     for(let x = 0; x < this.tilenum; x++){
       let tiles = []
       for(let y = 0; y < this.tilenum; y++){
@@ -148,13 +165,7 @@ phina.define('Tiles',{
     }
   },
   shuffle:function(x,y){
-    let prearray = []
-    for(let i=0;i<this.tilenum;i++){
-      for(let j=0;j<this.tilenum;j++){
-        prearray[i*this.tilenum+j]=[i,j]
-      }
-    }
-    prearray=prearray.filter(i=>(i[0]!=x || i[1]!=y));
+    let prearray = new Array(this.tilenum*this.tilenum).fill(null).map((item, i) => [Math.floor(i / this.tilenum), i % this.tilenum]).filter(i=>(i[0]!=x || i[1]!=y));
     for (let i = prearray.length - 1; i >= 0; i--) {
       let j = Math.floor(Math.random() * (i + 1));
       [prearray[i], prearray[j]] = [prearray[j], prearray[i]];
@@ -163,21 +174,19 @@ phina.define('Tiles',{
       this.bombs[i] = [prearray[i][0],prearray[i][1]]
     }
     this.setnum();
-    this.isclicked=true
+    this.isongame = true;
   },
   play:function(x,y){
-    if(!(this.isclicked)){
+    if(!(this.isongame)){
       this.parent.start()
       this.shuffle(x,y);
     }
     this.tiles[x][y].open();
+    this.addhistory()
     if(this.tiles[x][y].isbomb){
-      this.parent.gameover()
-      setTimeout(()=>{
-        alert("gameover");
-      },50);
+      this.gameover(false); //負け
     }else{
-      this.blindtile--;
+      this.opentile++;
       if(this.count()){
         this.movebomb();
       }
@@ -212,8 +221,7 @@ phina.define('Tiles',{
     for(i=0;i<this.bombnum;i++){
       let bombx = this.bombs[i][0]
       let bomby = this.bombs[i][1]
-      let direct = new Array(9).fill(null).map((_,i)=>[Math.floor(i/3)-1,i%3-1])
-      direct = direct.filter(i=>i[0]*i[1]==0)
+      let direct = new Array(9).fill(null).map((_,i)=>[Math.floor(i/3)-1,i%3-1]).filter(i=>i[0]*i[1]==0);
       direct = direct.filter(i=>(0 <= bombx+i[0] && bombx+i[0] < self.tilenum && 0 <= bomby+i[1] && bomby+i[1] < self.tilenum))
                      .filter(i=>!(self.bombs.some(j=>(j[0]==bombx+i[0] && j[1]==bomby+i[1]))))
                      .filter(i=>!(self.tiles[bombx+i[0]][bomby+i[1]].isopen))
@@ -224,14 +232,33 @@ phina.define('Tiles',{
     this.setnum()
   },
   count:function(){
-    if(this.blindtile==this.bombnum){
-      this.parent.gameover()
-      setTimeout(()=>{
-        alert("clear");
-      },50);
+    if(this.opentile==this.tilenum*this.tilennum-this.bombnum){
+      this.gameover(true); //勝ち
       return false;
     }
     return true;
+  },
+  addhistory: function(){
+    let history = new Array(this.tilenum*this.tilenum).fill(null).map((item, i) => this.tiles[Math.floor(i / this.tilenum)][i % this.tilenum].historylabel());
+    this.history.push(history)
+  },
+  sethistory: function(h){
+    this.history[h].forEach((item, i) => {
+      this.tiles[Math.floor(i / this.tilenum)][i % this.tilenum].sethistory(item)
+    });
+  },
+  gameover: function(iswin){
+    this.sethistory(this.opentile);
+    this.parent.gameover(this.opentile)
+    if(iswin){
+      setTimeout(()=>{
+        alert("clear");
+      },50);
+    }else{
+      setTimeout(()=>{
+        alert("gameover");
+      },50);
+    }
   }
 })
 
@@ -239,7 +266,7 @@ phina.define('Tile',{
   superClass:'TileDesign',
   init: function(nx,ny,w){
     this.superInit();
-    this.fill="gray";
+    this.fill=COLORS.close;
     this.width=w;
     this.height=w;
     this.nx=nx;
@@ -254,7 +281,7 @@ phina.define('Tile',{
   open: function(){
     this.setInteractive(false);
     this.isopen=true
-    this.fill="white";
+    this.fill=COLORS.open;
     this.label.show()
   },
   change: function(n){
@@ -269,6 +296,22 @@ phina.define('Tile',{
   },
   onpointend: function(){
     this.parent.play(this.nx,this.ny)
+  },
+  historylabel: function(){
+    return {isbomb: this.isbomb, isopen: this.isopen,text:this.label.text}
+  },
+  sethistory: function(props){
+    this.change(props.text)
+    if(props.isopen){
+      this.fill=COLORS.open
+      this.label.show()
+    }else{
+      this.fill=COLORS.close
+      this.label.hide()
+    }
+    if(props.isbomb){
+      this.label.show()
+    }
   }
 });
 
@@ -295,8 +338,8 @@ phina.define('ChangeNumButton',{
     this.maxnum = option.maxnum;
     this.minnum = option.minnum;
     let position = 30;
-    this.up = UpTriangleDesign().addChildTo(this).setPosition(-position,10);
-    this.down = DownTriangleDesign().addChildTo(this).setPosition(position,-10);
+    this.up = TriangleButtonDesign(0).addChildTo(this).setPosition(-position,10);
+    this.down = TriangleButtonDesign(180).addChildTo(this).setPosition(position,-10);
     this.canupdown()
   },
   upnum:function(){
@@ -318,10 +361,10 @@ phina.define('ChangeNumButton',{
   }
 })
 
-phina.define('UpTriangleDesign',{
+phina.define('TriangleButtonDesign',{
   superClass: 'TriangleShape',
-  init:function(){
-    this.superInit({radius:30,fill:COLORS[3]});
+  init:function(rotation){
+    this.superInit({radius:30,fill:COLORS[3],rotation:rotation});
   },
   active: function(bool){
     this.setInteractive(bool);
@@ -333,12 +376,30 @@ phina.define('UpTriangleDesign',{
   }
 })
 
-phina.define('DownTriangleDesign',{
-  superClass:'UpTriangleDesign',
-  init:function(){
-    this.superInit()
-    this.rotation=180
-  }
+phina.define('ChangeLRNumButton',{
+  superClass: 'DisplayElement',
+  init:function(option){
+    this.superInit();
+    this.num = option.num;
+    this.maxnum = option.maxnum;
+    this.minnum = option.minnum;
+    let position = 100;
+    this.leftbutton = TriangleButtonDesign(270).addChildTo(this).setPosition(-position,0);
+    this.rightbutton = TriangleButtonDesign(90).addChildTo(this).setPosition(position,0);
+    this.canupdown()
+  },
+  upnum:function(){
+    this.num++;
+    this.canupdown()
+  },
+  downnum:function(){
+    this.num--;
+    this.canupdown()
+  },
+  canupdown:function(){
+    this.rightbutton.active((this.minnum<=this.num && this.num<this.maxnum));
+    this.leftbutton.active((this.minnum<this.num && this.num<=this.maxnum));
+  },
 })
 
 // メイン処理
