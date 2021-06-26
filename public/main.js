@@ -6,6 +6,7 @@ const COLORS = {
       frame:'#43464d',
       close: "gray",
       open : "white",
+      next : "yellow",
       0:'#9aadbe',
       1:'#934e61',
       2:'#4d639f',
@@ -181,8 +182,8 @@ phina.define('Tiles',{
       this.parent.start()
       this.shuffle(x,y);
     }
+    this.addhistory(x,y)
     this.tiles[x][y].open();
-    this.addhistory()
     if(this.tiles[x][y].isbomb){
       this.gameover(false); //負け
     }else{
@@ -238,8 +239,8 @@ phina.define('Tiles',{
     }
     return true;
   },
-  addhistory: function(){
-    let history = new Array(this.tilenum*this.tilenum).fill(null).map((item, i) => this.tiles[Math.floor(i / this.tilenum)][i % this.tilenum].historylabel());
+  addhistory: function(x,y){
+    let history = new Array(this.tilenum*this.tilenum).fill(null).map((item, i) => this.tiles[Math.floor(i / this.tilenum)][i % this.tilenum].historylabel(x,y))
     this.history.push(history)
   },
   sethistory: function(h){
@@ -297,8 +298,8 @@ phina.define('Tile',{
   onpointend: function(){
     this.parent.play(this.nx,this.ny)
   },
-  historylabel: function(){
-    return {isbomb: this.isbomb, isopen: this.isopen,text:this.label.text}
+  historylabel: function(x,y){
+    return {isbomb: this.isbomb, isopen: this.isopen,text:this.label.text, isnext: (this.nx == x && this.ny ==y)}
   },
   sethistory: function(props){
     this.change(props.text)
@@ -311,6 +312,9 @@ phina.define('Tile',{
     }
     if(props.isbomb){
       this.label.show()
+    }
+    if(props.isnext){
+      this.fill = COLORS.next;
     }
   }
 });
