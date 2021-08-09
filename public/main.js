@@ -53,6 +53,7 @@ phina.define('MainScene', {
         tile.setInteractive(false)
       });
     });
+    this.opentile = opentile;
     this.isongame=false;
     let button = ButtonDesign({text:"retry",width:120,height:60}).addChildTo(this).setPosition(540,880)
     button.onpointend=() =>this.exit({tilenum:this.tilenum,bombnum:this.bombnum})
@@ -65,11 +66,15 @@ phina.define('MainScene', {
       this.historybutton.downnum();
       this.updatehistory(this.historybutton.num)
     }
-    this.historytext = Label({text: (opentile + 1) + "手目",fontSize:40 }).addChildTo(this).setPosition(320,880)
+    this.historytext = Label({text: "最終盤",fontSize:40 }).addChildTo(this).setPosition(320,880)
   },
   updatehistory: function(h){
     this.tileGroup.sethistory(h)
-    this.historytext.text=(h + 1) + "手目"
+    if(h==this.opentile){
+      this.historytext.text="最終盤"
+    }else{
+      this.historytext.text=(h+1) + "手目"
+    }
   }
 });
 
@@ -249,8 +254,9 @@ phina.define('Tiles',{
     });
   },
   gameover: function(iswin){
-    this.sethistory(this.opentile);
-    this.parent.gameover(this.opentile)
+    this.addhistory(-1,-1)
+    this.sethistory(this.opentile+1);
+    this.parent.gameover(this.opentile+1)
     if(iswin){
       setTimeout(()=>{
         alert("clear");
