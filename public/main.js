@@ -66,6 +66,10 @@ phina.define("MainScene", {
       .setPosition(540, 880);
     retrybutton.onpointend = () =>
       this.exit({ tilenum: this.tilenum, bombnum: this.bombnum });
+    this.howtobutton = ButtonDesign({ text: "遊び方", width: 120, height: 60 })
+      .addChildTo(this)
+      .setPosition(100, 880);
+    this.howtobutton.onpointend = () => this.app.pushScene(HowToPlayScene());
   },
   update: function (app) {
     if (this.isongame) {
@@ -83,6 +87,9 @@ phina.define("MainScene", {
   gameover: function (props) {
     this.isongame = false;
     this.digbutton.hide();
+    this.digbutton.setInteractive(false);
+    this.howtobutton.hide();
+    this.howtobutton.setInteractive(false);
     this.opentile = props.opentile;
     this.app.pushScene(GameoverPopup());
     this.historybutton = ChangeLRNumButton({
@@ -103,6 +110,15 @@ phina.define("MainScene", {
     this.historytext = Label({ text: "最終盤", fontSize: 40 })
       .addChildTo(this)
       .setPosition(320, 880);
+    ButtonDesign({
+      text: "シェア",
+    })
+      .addChildTo(this)
+      .setPosition(100, 880).onpush = function () {
+      let url =
+        "https://twitter.com/intent/tweet?text=%E7%88%86%E5%BC%BE%E3%81%8C%E5%8B%95%E3%81%8F%E3%83%9E%E3%82%A4%E3%83%B3%E3%82%B9%E3%82%A4%E3%83%BC%E3%83%91%E3%83%BC%E3%81%A0%E3%82%88%0A%E3%81%BF%E3%82%93%E3%81%AA%E3%82%82%E3%82%84%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%A6%E3%81%AD%0Ahttps%3A%2F%2Fugokusweeper.web.app%0A%23%E5%8B%95%E3%81%8F%E3%82%B9%E3%82%A4%E3%83%BC%E3%83%91%E3%83%BC%0A";
+      window.open(url);
+    };
   },
   updatehistory: function (h) {
     this.tileGroup.sethistory(h);
@@ -408,6 +424,13 @@ phina.define("Tile", {
     this.label.tweener.by({ rotation: 30 }, 100);
     this.label.tweener.play();
   },
+  bombanim: function () {
+    if (this.isbomb) {
+      this.label.tweener.wait(100);
+      this.change("💥");
+      this.label.tweener.wait(100);
+    }
+  },
   onpointend: function () {
     if (!this.isopen) {
       if (this.isdigmode) {
@@ -598,23 +621,127 @@ phina.define("GameoverPopup", {
       .addChildTo(waku)
       .setPosition(0, -waku.height / 6);
   },
-})
+});
+
+phina.define("HowToPlayScene", {
+  superClass: "DisplayScene",
+  init: function (option) {
+    option = (option || {}).$strict({ tilenum: 9, bombnum: 10 });
+    this.superInit(option);
+    // 背景色を指定
+    this.tilenum = option.tilenum;
+    this.bombnum = option.bombnum;
+    this.tilewidth = 504 / this.tilenum;
+    option.tilewidth = this.tilewidth;
+    this.backgroundColor = COLORS.bg;
+    this.isdigmode = true;
+    let self = this;
+    this.tileGroup = Tiles(option)
+      .addChildTo(this)
+      .setPosition(
+        this.gridX.center() - ((this.tilewidth + 3) * (this.tilenum - 1)) / 2,
+        this.gridY.center() - ((this.tilewidth + 3) * (this.tilenum - 1)) / 2
+      );
+    this.tileGroup.stopaccess();
+    this.complements = DisplayElement().addChildTo(this);
+    this.scene = 1;
+    this.scene1();
+  },
+  scene1: function () {
+    this.rectangle = RectangleShape({
+      fill: "rgba(0,0,0,0)",
+      stroke: "red",
+      strokeWidth: 5,
+      width: this.tilewidth * 3 + 8,
+      height: this.tilewidth * 3 + 8,
+    })
+      .addChildTo(this.complements)
+      .setPosition(this.gridX.center(), this.gridY.center());
+    this.tileGroup.tiles[4][4].fill = "white";
+    this.tileGroup.tiles[4][4].change("1");
+    this.tileGroup.tiles[4][4].label.fill = "red";
+    this.tileGroup.tiles[4][4].label.show();
+    this.tileGroup.tiles[5][5].change("💣");
+    this.tileGroup.tiles[5][5].label.show();
+    this.description = TextRectangle(
+      "数字は周囲8マスにある\n💣の数を表しています"
+    )
+      .addChildTo(this.complements)
+      .setPosition(this.gridX.center(), 760);
+  },
+  scene2: function () {
+    this.rectangle.hide();
+    this.tileGroup.tiles[3][4].fill = "white";
+    this.tileGroup.tiles[3][4].change("1");
+    this.tileGroup.tiles[3][4].label.show();
+    this.tileGroup.tiles[4][4].fill = "white";
+    this.tileGroup.tiles[4][4].label.fill = "black";
+    this.tileGroup.tiles[4][5].change("💣");
+    this.tileGroup.tiles[4][5].label.show();
+    this.tileGroup.tiles[5][5].label.hide();
+    this.description.changetext("マスを開けるたびに\n💣が上下左右に動きます");
+  },
+  scene3: function () {
+    this.tileGroup.tiles[4][5].fill = "white";
+    this.tileGroup.tiles[4][5].change("💥");
+    this.tileGroup.tiles[4][5].label.show();
+    this.description.changetext("💣のあるマスを触ったら\nゲームオーバーです");
+  },
+  scene4: function () {
+    this.description.changetext("グッドラック");
+  },
+  onpointend: function () {
+    switch (this.scene++) {
+      case 1:
+        this.scene2();
+        break;
+      case 2:
+        this.scene3();
+        break;
+      case 3:
+        this.scene4();
+        break;
+      default:
+        this.exit();
+    }
+  },
+});
+
+phina.define("TextRectangle", {
+  superClass: "RectangleShape",
+  init: function (text) {
+    this.superInit({
+      stroke: COLORS.frame,
+      fill: COLORS.bg,
+      width: 400,
+      height: 100,
+      strokeWidth: 6,
+      cornerRadius: 0,
+    });
+    this.label = Label({ text: text }).addChildTo(this).setPosition(0, 0);
+  },
+  changetext: function (text) {
+    this.label.text = text;
+  },
+});
 
 // メイン処理
 phina.main(function () {
   // アプリケーション生成
   let app = GameApp({
-    startLabel: 'main', // メインシーンから開始する
+    startLabel: "main", // メインシーンから開始する
     scenes: [
       {
-        className:'MainScene',
-        label: 'main',
-        nextLabel: 'main',
-      },{
-        className:'SettingScene',
-        label:'setting',
-      }
-    ]
+        className: "MainScene",
+        label: "main",
+        nextLabel: "main",
+      },
+      {
+        className: "SettingScene",
+        label: "setting",
+        nextLabel: "main",
+      },
+    ],
   });
   // アプリケーション実行
   app.run();
