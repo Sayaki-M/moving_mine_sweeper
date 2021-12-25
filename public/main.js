@@ -91,7 +91,7 @@ phina.define("MainScene", {
     this.howtobutton.hide();
     this.howtobutton.setInteractive(false);
     this.opentile = props.opentile;
-    this.app.pushScene(GameoverPopup());
+    this.app.pushScene(GameoverPopup(props.iswin));
     this.historybutton = ChangeLRNumButton({
       num: this.opentile,
       maxnum: this.opentile,
